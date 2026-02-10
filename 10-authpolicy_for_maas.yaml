@@ -1,0 +1,76 @@
+---
+apiVersion: kuadrant.io/v1
+kind: AuthPolicy
+metadata:
+  name: gateway-auth-policy
+  namespace: openshift-ingress
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway
+  rules:
+    metadata:
+      matchedTier:
+        http:
+          url: http://maas-api.redhat-ods-applications.svc.cluster.local:8080/v1/tiers/lookup
+          contentType: application/json
+          method: POST
+          body:
+            expression: |-
+              { "groups": auth.identity.user.groups }
+        cache:
+          key:
+            selector: auth.identity.user.username
+          ttl: 300
+    authentication:
+      service-accounts:
+        kubernetesTokenReview:
+          audiences:
+            - maas-default-gateway-sa
+        defaults:
+          userid:
+            expression: |
+              auth.identity.user.username.split(":")[3]
+        cache:
+          key:
+            selector: context.request.http.headers.authorization.@case:lower
+          ttl: 600
+    authorization:
+      tier-access:
+        cache:
+          key:
+            selector: "{auth.identity.user.username}:{request.path}"
+          ttl: 60
+        kubernetesSubjectAccessReview:
+          user:
+            expression: auth.identity.user.username
+          authorizationGroups:
+            expression: auth.identity.user.groups
+          resourceAttributes:
+            group:
+              value: serving.kserve.io
+            resource:
+              value: llminferenceservices
+            namespace:
+              expression: |
+                request.path.split("/")[1]
+            name:
+              expression: |
+                request.path.split("/")[2]
+            verb:
+              value: post
+    response:
+      success:
+        headers:
+          X-MaaS-Username:
+            plain:
+              selector: auth.identity.userid
+        filters:
+          identity:
+            json:
+              properties:
+                userid:
+                  expression: auth.identity.userid
+                tier:
+                  expression: auth.metadata.matchedTier["tier"]

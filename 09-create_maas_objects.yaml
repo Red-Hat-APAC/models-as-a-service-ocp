@@ -1,0 +1,152 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: maas-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maas-api
+  namespace: redhat-ods-applications
+  labels:
+    app.kubernetes.io/name: maas-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: maas-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: maas-api
+    spec:
+      serviceAccountName: maas-api
+      securityContext:
+        runAsNonRoot: true
+      containers:
+      - name: maas-api
+        image: quay.io/opendatahub/maas-api
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: SECURE
+          value: "false"
+        # Note: By default, uses in-memory storage (ephemeral - data lost on restart).
+        # For persistent storage, use one of the overlays:
+        #   - deployment/overlays/tls-backend-disk (single replica, file-based)
+        # Or configure external database (HA-ready):
+        #   - See docs/samples/database/external for configuration examples
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: maas-api
+  namespace: redhat-ods-applications
+spec:
+  selector:
+    app.kubernetes.io/name: maas-api
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: maas-api
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# SA token provider resources
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list", "watch", "create"]
+- apiGroups: [""]
+  resources: ["serviceaccounts"]
+  verbs: ["get", "list", "watch", "create", "delete"]
+- apiGroups: [""]
+  # Needed for TokenRequest API
+  resources: ["serviceaccounts/token"]
+  verbs: ["create"]
+
+# Token review for authentication
+- apiGroups: ["authentication.k8s.io"]
+  resources: ["tokenreviews"]
+  verbs: ["create"]
+
+# KServe resources for model management
+- apiGroups: ["serving.kserve.io"]
+  resources: ["inferenceservices", "llminferenceservices"]
+  verbs: ["get", "list", "watch"]
+
+# Gateway API resources for route filtering
+- apiGroups: ["gateway.networking.k8s.io"]
+  resources: ["httproutes"]
+  verbs: ["get", "list", "watch"]
+
+# Metrics and monitoring
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: maas-api
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: maas-api
+  namespace: redhat-ods-applications
+subjects:
+- kind: ServiceAccount
+  name: maas-api
+  namespace: redhat-ods-applications
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: maas-api
