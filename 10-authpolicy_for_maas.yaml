@@ -13,7 +13,7 @@ spec:
     metadata:
       matchedTier:
         http:
-          url: http://maas-api.redhat-ods-applications.svc.cluster.local:8080/v1/tiers/lookup
+          url: http://maas-api.maas-api.svc.cluster.local:8080/v1/tiers/lookup
           contentType: application/json
           method: POST
           body:

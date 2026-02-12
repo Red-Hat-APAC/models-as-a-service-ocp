@@ -85,54 +85,6 @@ spec:
 oc apply -f 11-token_rate_limit_policy_and_tier_to_grp.yaml
 ```
 
-## Verification
-
-```bash
-# Check all namespaces
-oc get ns | grep -E "kuadrant-system|kserve|redhat-ods-applications"
-
-# Check Gateway status
-oc get gateway -n openshift-ingress maas-default-gateway
-
-# Check policies
-oc get authpolicy -A
-oc get tokenratelimitpolicy -A
-oc get ratelimitpolicy -A
-
-# Check MaaS API (deployed by operator in redhat-ods-applications)
-oc get pods -n redhat-ods-applications -l app.kubernetes.io/name=maas-api
-oc get svc -n redhat-ods-applications
-# Test connectivity between Authorino and MaaS
-AUTHORINO_POD=$(oc get pods -n kuadrant-system -l authorino-resource=authorino -o jsonpath='{.items[0].metadata.name}')
-oc exec -n kuadrant-system $AUTHORINO_POD -- curl -s http://maas-api.redhat-ods-applications.svc.cluster.local:8080/health
-
-# Check Kuadrant operators
-oc get pods -n kuadrant-system
-
-# Check RHOAI/KServe
-oc get pods -n kserve
-oc get pods -n redhat-ods-applications
-
-# Deploy Sample CPU Model
-oc apply 09-
-
-# Check LLMInferenceService status
-oc get llminferenceservices -n redhat-ods-applications
-
-# Check pods
-oc get pods -n redhat-ods-applications && \
-oc get pods -n kuadrant-system && \
-oc get pods -n kserve && \
-
-# Check Gateway status
-oc get gateway -n openshift-ingress maas-default-gateway
-
-# Check policies are enforced
-oc get authpolicy -A && \
-oc get tokenratelimitpolicy -A && \
-oc get llminferenceservices -n redhat-ods-applications
-```
-
 ## Playing with LLMs and rate limiting
 
 ```bash
@@ -163,7 +115,7 @@ TOKEN_RESPONSE=$(curl -sSk \
   -H "Content-Type: application/json" \
   -X POST \
   -d '{"expiration": "10m"}' \
-  "${HOST}/maas-api/v1/tokens") && \
+  "${HOST}/redhat-ods-applications/maas-api/v1/tokens") && \
 TOKEN=$(echo $TOKEN_RESPONSE | jq -r .token) && \
 echo "Token obtained: ${TOKEN:0:20}..."
 
@@ -195,6 +147,47 @@ for i in {1..16}; do
     -d "{\"model\": \"${MODEL_NAME}\", \"prompt\": \"Hello\", \"max_tokens\": 50}" \
     "${MODEL_URL}/v1/completions"
 done
+```
+
+## Verification
+
+```bash
+# Check all namespaces
+oc get ns | grep -E "kuadrant-system|kserve|redhat-ods-applications|maas-api|llm"
+
+# Check Gateway status
+oc get gateway -n openshift-ingress maas-default-gateway
+
+# Check policies
+oc get authpolicy -A
+oc get tokenratelimitpolicy -A
+oc get ratelimitpolicy -A
+
+# Check MaaS API
+oc get pods -n maas-api -l app.kubernetes.io/name=maas-api
+oc get svc -n maas-api
+# Test connectivity between Authorino and MaaS
+AUTHORINO_POD=$(oc get pods -n kuadrant-system -l authorino-resource=authorino -o jsonpath='{.items[0].metadata.name}')
+oc exec -n kuadrant-system $AUTHORINO_POD -- curl -s http://maas-api.maas-api.svc.cluster.local:8080/health
+
+# Check Kuadrant operators
+oc get pods -n kuadrant-system
+
+# Check RHOAI/KServe
+oc get pods -n kserve
+oc get pods -n redhat-ods-applications
+
+# Check pods
+oc get pods -n redhat-ods-applications && \
+oc get pods -n kuadrant-system && \
+oc get pods -n kserve
+
+# Check Gateway status
+oc get gateway -n openshift-ingress maas-default-gateway
+
+# Check policies are enforced
+oc get authpolicy -A && \
+oc get tokenratelimitpolicy -A
 ```
 
 ---

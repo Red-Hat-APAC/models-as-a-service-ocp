@@ -1,11 +1,18 @@
 ---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: llm
+  labels:
+    opendatahub.io/dashboard: 'true'
+---
 apiVersion: serving.kserve.io/v1alpha1
 kind: LLMInferenceService
 metadata:
   name: simulated
-  namespace: redhat-ods-applications
+  namespace: llm
   annotations:
-    alpha.maas.opendatahub.io/tiers='["innovation","premium","critical"]'
+    alpha.maas.opendatahub.io/tiers: '["innovation","premium","critical"]'
 spec:
   model:
     uri: hf://sshleifer/tiny-gpt2 # ~2MB test model, simulator ignores it anyway

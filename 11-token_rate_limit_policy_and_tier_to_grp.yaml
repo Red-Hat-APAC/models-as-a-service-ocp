@@ -1,4 +1,10 @@
 ---
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  name: model-rate-limits
+  namespace: llm
+---
 apiVersion: kuadrant.io/v1alpha1
 kind: TokenRateLimitPolicy
 metadata:
@@ -45,17 +51,18 @@ metadata:
 data:
   tiers: |
     - name: innovation
-      description: Free tier for basic users
+      displayName: Innovation Tier
+      level: 0
+      groups:
+        - innovation
+        - system:authenticated
+    - name: premium
+      displayName: Premium Tier
       level: 1
       groups:
-      - system:authenticated
-    - name: premium
-      description: Premium tier
-      level: 10
-      groups:
-      - premium-users
+        - premium
     - name: critical
-      description: Critical tier
-      level: 20
+      displayName: Critical Tier
+      level: 2
       groups:
-      - critical-users
+        - critical

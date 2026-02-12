@@ -4,32 +4,39 @@ kind: DataScienceCluster
 metadata:
   name: default-dsc
 spec:
- components:
-   dashboard:
+  components:
+    kserve:
       managementState: Managed
-   aipipelines:
-      managementState: Managed
-   feastoperator:
-      managementState: Managed
-   kserve:
-      managementState: Managed
-      rawDeploymentServiceConfig: Headed
-      modelsAsService:
+      nim:
         managementState: Managed
-   llamastackoperator:
-      managementState: Managed
-   kueue:
-      defaultClusterQueueName: default
-      defaultLocalQueueName: default
-      managementState: Unmanaged
-   modelregistry:
+      rawDeploymentServiceConfig: Headed
+    modelregistry:
       managementState: Managed
       registriesNamespace: rhoai-model-registries
-   ray:
+    feastoperator:
       managementState: Managed
-   workbenches:
+    trustyai:
+      eval:
+        lmeval:
+          permitCodeExecution: deny
+          permitOnline: deny
       managementState: Managed
-   trainingoperator:
+    aipipelines:
       managementState: Managed
-   trustyai:
+    ray:
+      managementState: Managed
+    kueue:
+      defaultClusterQueueName: default
+      defaultLocalQueueName: default
+      managementState: Removed
+    workbenches:
+      managementState: Managed
+      workbenchNamespace: rhods-notebooks
+    mlflowoperator: {}
+    dashboard:
+      managementState: Managed
+    trainer: {}
+    llamastackoperator:
+      managementState: Managed
+    trainingoperator:
       managementState: Managed
