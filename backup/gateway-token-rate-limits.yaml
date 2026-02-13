@@ -1,0 +1,37 @@
+---
+# Backup: Fri 13 Feb 2026 11:21:12 UTC
+apiVersion: kuadrant.io/v1alpha1
+kind: TokenRateLimitPolicy
+metadata:
+  name: gateway-token-rate-limits
+  namespace: openshift-ingress
+spec:
+  limits:
+    critical-user-tokens:
+      counters:
+      - expression: auth.identity.userid
+      rates:
+      - limit: 300000
+        window: 1m
+      when:
+      - predicate: auth.identity.tier == "critical" && !request.path.endsWith("/v1/models")
+    innovation-user-tokens:
+      counters:
+      - expression: auth.identity.userid
+      rates:
+      - limit: 200
+        window: 1m
+      when:
+      - predicate: auth.identity.tier == "innovation" && !request.path.endsWith("/v1/models")
+    premium-user-tokens:
+      counters:
+      - expression: auth.identity.userid
+      rates:
+      - limit: 75000
+        window: 1m
+      when:
+      - predicate: auth.identity.tier == "premium" && !request.path.endsWith("/v1/models")
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway

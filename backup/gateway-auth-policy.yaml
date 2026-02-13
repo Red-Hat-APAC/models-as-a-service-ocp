@@ -1,0 +1,91 @@
+---
+# Backup: Fri 13 Feb 2026 11:21:12 UTC
+apiVersion: kuadrant.io/v1
+kind: AuthPolicy
+metadata:
+  name: gateway-auth-policy
+  namespace: openshift-ingress
+spec:
+  rules:
+    authentication:
+      service-accounts:
+        cache:
+          key:
+            selector: context.request.http.headers.authorization.@case:lower
+          ttl: 600
+        defaults:
+          userid:
+            expression: |
+              auth.identity.user.username.split(":")[3]
+        kubernetesTokenReview:
+          audiences:
+          - maas-default-gateway-sa
+        metrics: false
+        priority: 0
+    authorization:
+      tier-access:
+        cache:
+          key:
+            selector: '{auth.identity.user.username}:{request.path}'
+          ttl: 60
+        kubernetesSubjectAccessReview:
+          authorizationGroups:
+            expression: auth.identity.user.groups
+          resourceAttributes:
+            group:
+              value: serving.kserve.io
+            name:
+              expression: |
+                request.path.split("/")[2]
+            namespace:
+              expression: |
+                request.path.split("/")[1]
+            resource:
+              value: llminferenceservices
+            verb:
+              value: post
+          user:
+            expression: auth.identity.user.username
+        metrics: false
+        priority: 0
+    metadata:
+      matchedTier:
+        cache:
+          key:
+            selector: auth.identity.user.username
+          ttl: 300
+        http:
+          body:
+            expression: '{ "groups": auth.identity.user.groups }'
+          contentType: application/json
+          method: POST
+          url: http://maas-api.maas-api.svc.cluster.local:8080/v1/tiers/lookup
+        metrics: false
+        priority: 0
+    response:
+      success:
+        filters:
+          identity:
+            json:
+              properties:
+                tier:
+                  expression: auth.metadata.matchedTier.tier
+                userid:
+                  expression: auth.identity.userid
+            metrics: false
+            priority: 0
+        headers:
+          X-MaaS-Tier:
+            metrics: false
+            plain:
+              selector: auth.metadata.matchedTier.tier
+            priority: 0
+          X-MaaS-Username:
+            metrics: false
+            plain:
+              selector: auth.identity.userid
+            priority: 0
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: maas-default-gateway

@@ -1,0 +1,38 @@
+---
+# Backup: Fri 13 Feb 2026 11:21:12 UTC
+apiVersion: kuadrant.io/v1
+kind: AuthPolicy
+metadata:
+  labels:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/name: maas-api
+    app.kubernetes.io/part-of: models-as-a-service
+  name: maas-api-auth-policy
+  namespace: maas-api
+spec:
+  rules:
+    authentication:
+      openshift-identities:
+        kubernetesTokenReview:
+          audiences:
+          - https://kubernetes.default.svc
+          - maas-default-gateway-sa
+        metrics: false
+        priority: 0
+    response:
+      success:
+        headers:
+          X-MaaS-Group:
+            metrics: false
+            plain:
+              selector: auth.identity.user.groups.@tostr
+            priority: 0
+          X-MaaS-Username:
+            metrics: false
+            plain:
+              selector: auth.identity.user.username
+            priority: 0
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: maas-api-route
