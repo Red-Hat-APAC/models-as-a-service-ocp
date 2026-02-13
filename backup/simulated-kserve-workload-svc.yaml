@@ -1,0 +1,21 @@
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: simulated-kserve-workload-svc
+  namespace: llm
+  labels:
+    app.kubernetes.io/component: llminferenceservice-workload
+    app.kubernetes.io/name: simulated
+    app.kubernetes.io/part-of: llminferenceservice
+    llm-d.ai/managed: 'true'
+spec:
+  exportTo:
+    - '*'
+  host: simulated-kserve-workload-svc.llm.svc.cluster.local
+  trafficPolicy:
+    tls:
+      caCertificates: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
+      insecureSkipVerify: false
+      mode: SIMPLE
+      sni: simulated-kserve-workload-svc.llm.svc.cluster.local

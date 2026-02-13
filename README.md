@@ -90,10 +90,10 @@ oc apply -f 11-token_rate_limit_policy_and_tier_to_grp.yaml
 ```bash
 # Deploy Meta's OPT 125m CPU testing model simulator (does not require GPU)
 oc apply -f 12-opt125m-cpu-model.yaml
-oc get LLMInferenceService simulated -n redhat-ods-applications
+oc get LLMInferenceService simulated -n llm
 
 # Modify the LLMInferenceService to use the newly created maas-default-gateway
-oc patch llminferenceservice simulated -n redhat-ods-applications --type='json' -p='[
+oc patch llminferenceservice simulated -n llm --type='json' -p='[
   {
     "op": "add",
     "path": "/spec/gateway/refs/-",
@@ -106,7 +106,7 @@ oc patch llminferenceservice simulated -n redhat-ods-applications --type='json' 
 
 # Get Gateway endpoint
 CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}') && \
-HOST="https://maas.${CLUSTER_DOMAIN}" && \
+HOST="http://maas.${CLUSTER_DOMAIN}" && \
 echo "Gateway endpoint: $HOST"
 
 # Get authentication endpoint
@@ -115,7 +115,7 @@ TOKEN_RESPONSE=$(curl -sSk \
   -H "Content-Type: application/json" \
   -X POST \
   -d '{"expiration": "10m"}' \
-  "${HOST}/redhat-ods-applications/maas-api/v1/tokens") && \
+  "${HOST}/maas-api/v1/tokens") && \
 TOKEN=$(echo $TOKEN_RESPONSE | jq -r .token) && \
 echo "Token obtained: ${TOKEN:0:20}..."
 
@@ -192,4 +192,4 @@ oc get tokenratelimitpolicy -A
 
 ---
 
-_Last update: Tue 10 Feb 2026 01:17:04 UTC_
+_Last update: Fri 13 Feb 2026 01:22:55 UTC_

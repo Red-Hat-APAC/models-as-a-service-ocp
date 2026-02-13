@@ -1,19 +1,32 @@
----
 apiVersion: datasciencecluster.opendatahub.io/v2
 kind: DataScienceCluster
 metadata:
   name: default-dsc
 spec:
   components:
+    aipipelines:
+      managementState: Managed
+    dashboard:
+      managementState: Managed
+    feastoperator:
+      managementState: Managed
     kserve:
       managementState: Managed
       nim:
         managementState: Managed
       rawDeploymentServiceConfig: Headed
+    kueue:
+      defaultClusterQueueName: default
+      defaultLocalQueueName: default
+      managementState: Removed
+    llamastackoperator:
+      managementState: Managed
     modelregistry:
       managementState: Managed
       registriesNamespace: rhoai-model-registries
-    feastoperator:
+    ray:
+      managementState: Managed
+    trainingoperator:
       managementState: Managed
     trustyai:
       eval:
@@ -21,22 +34,6 @@ spec:
           permitCodeExecution: deny
           permitOnline: deny
       managementState: Managed
-    aipipelines:
-      managementState: Managed
-    ray:
-      managementState: Managed
-    kueue:
-      defaultClusterQueueName: default
-      defaultLocalQueueName: default
-      managementState: Removed
     workbenches:
       managementState: Managed
       workbenchNamespace: rhods-notebooks
-    mlflowoperator: {}
-    dashboard:
-      managementState: Managed
-    trainer: {}
-    llamastackoperator:
-      managementState: Managed
-    trainingoperator:
-      managementState: Managed

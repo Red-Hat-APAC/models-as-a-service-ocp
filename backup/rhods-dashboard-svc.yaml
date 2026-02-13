@@ -1,0 +1,38 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    internal.config.kubernetes.io/previousKinds: Service
+    internal.config.kubernetes.io/previousNames: rhods-dashboard
+    internal.config.kubernetes.io/previousNamespaces: default
+    platform.opendatahub.io/instance.name: default-dashboard
+    platform.opendatahub.io/type: OpenShift AI Self-Managed
+    platform.opendatahub.io/version: 3.2.0
+    service.beta.kubernetes.io/backend-protocol: HTTPS
+    service.beta.openshift.io/serving-cert-secret-name: dashboard-proxy-tls
+  labels:
+    app: rhods-dashboard
+    app.kubernetes.io/part-of: rhods-dashboard
+    app.opendatahub.io/rhods-dashboard: "true"
+    platform.opendatahub.io/part-of: dashboard
+  name: rhods-dashboard
+  namespace: redhat-ods-applications
+spec:
+  clusterIP: 172.30.69.115
+  clusterIPs:
+  - 172.30.69.115
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: dashboard-ui
+    port: 8443
+  - name: mr-ui
+    port: 8043
+  - name: gen-ai-ui
+    port: 8143
+  selector:
+    app: rhods-dashboard
+    app.kubernetes.io/part-of: rhods-dashboard
+    deployment: rhods-dashboard

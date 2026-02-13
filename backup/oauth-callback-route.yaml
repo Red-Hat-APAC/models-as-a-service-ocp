@@ -1,0 +1,31 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    platform.opendatahub.io/instance.name: default-gateway
+    platform.opendatahub.io/type: OpenShift AI Self-Managed
+    platform.opendatahub.io/version: 3.2.0
+  name: oauth-callback-route
+  namespace: openshift-ingress
+  labels:
+    app.kubernetes.io/component: authentication
+    platform.opendatahub.io/part-of: gatewayconfig
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: data-science-gateway
+      namespace: openshift-ingress
+  rules:
+    - backendRefs:
+        - group: ''
+          kind: Service
+          name: kube-auth-proxy
+          namespace: openshift-ingress
+          port: 8443
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /oauth2

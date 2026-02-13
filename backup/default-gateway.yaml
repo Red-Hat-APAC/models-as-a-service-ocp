@@ -1,0 +1,15 @@
+---
+apiVersion: services.platform.opendatahub.io/v1alpha1
+kind: GatewayConfig
+metadata:
+  name: default-gateway
+spec:
+  authProxyTimeout: 5s
+  certificate:
+    secretName: data-science-gatewayconfig-tls
+    type: OpenshiftDefaultIngress
+  cookie:
+    expire: 24h0m0s
+    refresh: 1h0m0s
+  ingressMode: OcpRoute
+  verifyProviderCertificate: true

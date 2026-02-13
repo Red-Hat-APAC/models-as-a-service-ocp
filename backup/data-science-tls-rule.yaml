@@ -1,0 +1,28 @@
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  annotations:
+    platform.opendatahub.io/instance.name: default-gateway
+    platform.opendatahub.io/type: OpenShift AI Self-Managed
+    platform.opendatahub.io/version: 3.2.0
+  name: data-science-tls-rule
+  namespace: openshift-ingress
+  labels:
+    app.kubernetes.io/component: authentication
+    app.kubernetes.io/part-of: data-science-gateway
+    platform.opendatahub.io/part-of: gatewayconfig
+spec:
+  host: '*'
+  trafficPolicy:
+    portLevelSettings:
+      - port:
+          number: 8443
+        tls:
+          insecureSkipVerify: true
+          mode: SIMPLE
+      - port:
+          number: 443
+        tls:
+          insecureSkipVerify: true
+          mode: SIMPLE
